@@ -733,7 +733,7 @@ searchSites = {
     537: ('Bountyhunter Porn', 'https://nubiles-porn.com', '/video/website/23/'),
     538: ('Daddys Lil Angel', 'https://nubiles-porn.com', '/video/website/25/'),
     539: ('My Family Pies', 'https://nubiles-porn.com', '/video/website/26/'),
-    540: ('Nubiles', 'https://nubiles.net', '/video/'),
+    540: ('NubilesNet', 'https://nubiles.net', '/video/'),
     541: ('Bratty Sis', 'https://brattysis.com', '/video/gallery/'),
     542: ('Anilos', 'https://anilos.com', '/video/'),
     543: ('Hot Crazy Mess', 'https://hotcrazymess.com', '/video/'),
