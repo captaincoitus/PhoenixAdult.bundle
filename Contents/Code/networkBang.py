@@ -12,13 +12,13 @@ def search(results, lang, siteNum, searchData):
     googleResults = PAutils.getFromGoogleSearch(searchData.title, siteNum)
     for sceneURL in googleResults:
         sceneURL = sceneURL.split('?')[0]
-        if '/video/' in sceneURL and 'index.php/' not in sceneURL not in searchResults:
+        if 'com/video/' in sceneURL and 'index.php/' not in sceneURL not in searchResults:
             searchResults.append(sceneURL)
 
     for searchURL in searchResults:
         req = PAutils.HTTPRequest(searchURL)
         detailsPageElements = HTML.ElementFromString(req.text)
-        videoPageElements = json.loads(detailsPageElements.xpath('//script[@type="application/ld+json"]')[0].text_content().replace('\n', '').strip())
+        videoPageElements = json.loads(detailsPageElements.xpath('//script[@type="application/ld+json"]')[-1].text_content().replace('\n', '').strip())
 
         titleNoFormatting = PAutils.parseTitle(PAutils.cleanHTML(videoPageElements['name']), siteNum)
         curID = PAutils.Encode(searchURL)
@@ -73,7 +73,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     req = PAutils.HTTPRequest(sceneURL)
     detailsPageElements = HTML.ElementFromString(req.text)
 
-    videoPageElements = json.loads(detailsPageElements.xpath('//script[@type="application/ld+json"]')[0].text_content().replace('\n', '').strip())
+    videoPageElements = json.loads(detailsPageElements.xpath('//script[@type="application/ld+json"]')[-1].text_content().replace('\n', '').strip())
 
     # Title
     metadata.title = PAutils.parseTitle(PAutils.cleanHTML(videoPageElements['name']), siteNum)

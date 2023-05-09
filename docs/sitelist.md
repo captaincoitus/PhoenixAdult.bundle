@@ -9,7 +9,6 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
 
 # All Supported Networks and Sites
 
-+ #### 18OnlyGirls | ✅
 + #### 18 Network | ✓ - **Title or Actor Name**
   - Fit18
   - Thicc18
@@ -130,6 +129,14 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - Young Busty
 + #### Adult Time Studios | ✅
   - AdultTime
+    - Accidental Gangbang
+    - Caught Fapping
+    - Couple Swapping
+    - Dare We Share
+    - Kiss Me Fuck Me
+    - Modern Day Sins
+    - Oopsie
+    - Teen Sneaks
   - FameDigital
     - AllGirlMassage
     - CumshotOasis
@@ -173,6 +180,9 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
 + #### ArchAngel | ✓
 + #### ATK Network | ❌ - **ActressID with Title Search, Date Add**
   - ATKGirlfriends
++ #### Aunt Judys | ✅
+  - Aunt Judy's
+  - Aunt Judy's XXX
 + #### Aussie Ass | ✅
 + #### Babes Network | ✅
   - Babes
@@ -607,12 +617,17 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
 + #### HuCows | ✅
 + #### VIP4K | ✅
   - Black 4k
+  - Bride 4k
+  - Cuck 4k
   - Daddy 4k
   - Debt 4k
+  - Dyke 4k
   - Fist 4k
   - Hunt 4k
+  - Ignore 4k
   - Loan 4k
   - Mature 4k
+  - Mommy 4k
   - Old 4k
   - Pie 4k
   - Rim 4k
@@ -700,8 +715,19 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - WiredPussy
 + #### Kinky Spa | ✓
 + #### Little Caprice | ✅
+  - Buttmuse
+  - Caprice Divas
+  - NasstyX
+  - POVDreams
+  - Streetfuck
+  - SuperprivateX
+  - Wecumtoyou
+  - Xpervo
 + #### Look At Her Now | ✅
-+ #### Love Her Feet | ✅
++ #### LoveHerFilms | ✅
+  - LoveHerBoobs
+  - LoveHerFeet
+  - SheLovesBlack
 + #### Lustomic | ❌ - **SceneID, Date Add**
 + #### LustReality | ✅
 + #### ManyVids | ❌ - **SceneID, Date Add**
@@ -730,9 +756,11 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
 + #### MileHighNetwork Other Sites | ✅
   - BellesaFilms
   - BellesaHouse
+  - Dilfed
   - FamilySinners
+  - Gilfed
+  - Milfed
   - Transsensual
-+ #### Milfed | ✅
 + #### MissaX | ✓
 + #### ModelCentroNetwork | ✅
   - AlettaOceanLive
@@ -895,6 +923,8 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - Watch Your Mom
   - Watch Your Wife
   - Wives on Vacation
++ #### Naughty America Other Sites | ✓ - **Actor only**
+  - Tonights Girlfriend
 + #### NewSensations | ✅ - **Date Add**
 + #### NewSensations Other Sites | ✅
   - Fresh Out of High School
@@ -971,7 +1001,7 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - Up Her Asshole
 + #### PJGirls | ✅
 + #### Playboy Plus | ✅
-+ #### Plumper Pass | ✅
++ #### PlumperPass | ✅
 + #### PornCZ | ✓ - **Title or Actor**
   - Amateri Premium
   - Amateur From Bohemia
@@ -1119,6 +1149,7 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - Shower 4K
   - SpyFam
   - Tiny4k
+  - WetVR
 + #### PornstarPlatinum | ✅
 + #### POVR | ✓
 + #### PrettyDirty | ✅
@@ -1414,9 +1445,11 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - Teens Go Porn
   - Teens Natural Way
   - Teens Try Black
+  - Try Teens
   - We Need New Talents
   - White Teens Black Cocks
   - X Core Club
+  - Young Throats
 + #### TeenMegaWorld Network | ✅
   - 18 First Sex
   - About Girls Love
@@ -1474,7 +1507,6 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - Family Lust
   - Over 40 Handjobs
   - Teen Tugs
-+ #### Tonights Girlfriend | ✓ - **Actor only**
 + #### Top Web Models | ✅
   - 2 Girls 1 Camera
   - Big Gulp Girls
@@ -1593,10 +1625,13 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
 + #### Why Not Bi | ✅
 + #### Wicked | ✅
 + #### WoodmanCastingX | ✓ - **actress**
-+ #### WowGirls | ✓ - **Date Add**
++ #### WowNetwork | ✅
+  - 18OnlyGirls
+  - WowGirls
+  - WowPorn
 + #### X-Art | ✅
 + #### XConfessions | ✓
-+ #### Xempire | ✅
++ #### XEmpire | ✅
   - AllBlackX
   - Darkx
   - Eroticax
