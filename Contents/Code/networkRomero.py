@@ -48,11 +48,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     detailsPageElements = HTML.ElementFromString(req.text)
 
     # Title
-    metadata.title = PAutils.parseTitle(detailsPageElements.xpath('//meta[@itemprop="name"]/@content|//h1/text()')[0].split('|')[0].strip(), siteNum)
+    metadata.title = PAutils.parseTitle(detailsPageElements.xpath('//meta[@itemprop="name"]/@content|//h1/text()')[0].split('|')[0].split('- Free Video')[0].strip(), siteNum)
 
     # Summary
     summary = ''
-    paragraphs = detailsPageElements.xpath('//div[@class="cont"]/p|//div[@class="cont"]//div[@id="fullstory"]/p|//div[@class="zapdesc"]//div[not(contains(., "Including"))][.//br]')
+    if (1797 <= siteNum <= 1798):
+        paragraphs = detailsPageElements.xpath('//div[@id="fullstory"]/p')
+    else:
+        paragraphs = detailsPageElements.xpath('//div[@class="cont"]/p|//div[@class="cont"]//div[@id="fullstory"]/p|//div[@class="zapdesc"]//div[not(contains(., "Including"))][.//br]')
     for paragraph in paragraphs:
         text = paragraph.text_content().strip()
         if text and not text == '\xc2\xa0':
@@ -60,18 +63,13 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     metadata.summary = summary.strip()
 
-    # Director
-    directorElement = detailsPageElements.xpath('//div[contains(@class, "director")]/a/text()')
-    if directorElement:
-        director = metadata.directors.new()
-        directorName = directorElement[0].strip()
-        director.name = directorName
+    # Studio
+    metadata.studio = 'Romero Multimedia'
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
-    metadata.studio = 'Romero Multimedia'
-    metadata.tagline = PAsearchSites.getSearchSiteName(siteNum)
-    metadata.collections.add(metadata.tagline)
+    tagline = PAsearchSites.getSearchSiteName(siteNum)
+    metadata.tagline = tagline
+    metadata.collections.add(tagline)
 
     # Release Date
     date = detailsPageElements.xpath('//meta[@property="article:published_time"]/@content')[0].split('T')[0].strip()
@@ -84,19 +82,28 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         metadata.year = metadata.originally_available_at.year
 
     # Genres
-    movieGenres.clearGenres()
     for genreLink in detailsPageElements.xpath('//div[@class="Cats"]//a/text()|//div[@class="zapdesc"]/div/div/div[contains(., "Including:")]/text()'):
         genreName = genreLink.strip()
 
         movieGenres.addGenre(genreName)
 
-    # Actors
-    movieActors.clearActors()
-    for actorLink in detailsPageElements.xpath('//div[contains(@class, "inner")]//div[contains(@class, "tagsmodels")]/a'):
+    # Actor(s)
+    if siteNum == 896:
+        actorXpath = '//div[contains(@class, "tagsmodels")]//a'
+    else:
+        actorXpath = '//div[contains(@class, "tagsmodels")][./img[@alt="model icon"]]//a'
+    for actorLink in detailsPageElements.xpath(actorXpath):
         actorName = actorLink.text_content().strip()
         actorPhotoURL = ''
 
         movieActors.addActor(actorName, actorPhotoURL)
+
+    # Director
+    directorLink = detailsPageElements.xpath('//div[contains(@class, "director")]//a/text()')
+    if directorLink:
+        directorName = directorLink[0].strip()
+
+        movieActors.addDirector(directorName, '')
 
     # Posters
     xpaths = [

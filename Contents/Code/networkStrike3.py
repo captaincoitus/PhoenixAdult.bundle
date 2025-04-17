@@ -17,9 +17,10 @@ def getDatafromAPI(url, query, variables, referer):
 
 
 def search(results, lang, siteNum, searchData):
-    sceneID = searchData.title.split(' ', 1)[0]
-
-    if unicode(sceneID, 'UTF-8').isdigit() and len(sceneID) > 4:
+    sceneID = None
+    parts = searchData.title.split()
+    if unicode(parts[0], 'UTF-8').isdigit() and len(parts[0]) > 4:
+        sceneID = parts[0]
         searchData.title = searchData.title.replace(sceneID, '', 1).strip()
 
         search_variables = json.dumps({'videoId': sceneID, 'site': PAsearchSites.getSearchSiteName(siteNum).upper()})
@@ -28,8 +29,11 @@ def search(results, lang, siteNum, searchData):
             titleNoFormatting = PAutils.parseTitle(searchResult['findOneVideo']['title'], siteNum)
             releaseDate = parse(searchResult['findOneVideo']['releaseDate']).strftime('%Y-%m-%d')
             curID = PAutils.Encode(searchResult['findOneVideo']['slug'])
+            videoID = int(searchResult['findOneVideo']['videoId'])
 
-            if searchData.date:
+            if int(sceneID) == videoID:
+                score = 100
+            elif searchData.date:
                 score = 100 - Util.LevenshteinDistance(searchData.date, releaseDate)
             else:
                 score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
@@ -69,16 +73,10 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     # Summary
     metadata.summary = video['description']
 
-    # Director
-    if video['directors']:
-        director = metadata.directors.new()
-        director.name = video['directors'][0]['name']
-
     # Studio
     metadata.studio = PAsearchSites.getSearchSiteName(siteNum).title()
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
     metadata.collections.add(metadata.studio)
 
     # Release Date
@@ -87,7 +85,6 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.year = metadata.originally_available_at.year
 
     # Genres
-    movieGenres.clearGenres()
     if metadata.studio == 'Tushy' or metadata.studio == 'TushyRaw':
         movieGenres.addGenre('Anal')
 
@@ -97,8 +94,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
             movieGenres.addGenre(genreName)
 
-    # Actors
-    movieActors.clearActors()
+    # Actor(s)
     actors = video['models']
     for actor in actors:
         actorName = actor['name']
@@ -107,6 +103,12 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             actorPhotoURL = actor['images']['listing'][0]['highdpi']['double']
 
         movieActors.addActor(actorName, actorPhotoURL)
+
+    # Director
+    if video['directors']:
+        directorName = video['directors'][0]['name']
+
+        movieActors.addDirector(directorName, '')
 
     # Posters
     for name in ['movie', 'poster']:
@@ -123,6 +125,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
         art.append(img)
 
+    images = []
+    posterExists = False
     Log('Artwork found: %d' % len(art))
     for idx, posterUrl in enumerate(art, 1):
         cleanUrl = posterUrl.split('?')[0]
@@ -135,12 +139,29 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 resized_image = Image.open(im)
                 width, height = resized_image.size
                 # Add the image proxy items to the collection
-                if width > 1 or height > width:
+                if height > width:
                     # Item is a poster
                     metadata.posters[cleanUrl] = Proxy.Media(image.content, sort_order=idx)
-                if width > 100 and width > height and idx > 1:
+                    posterExists = True
+                if width > height:
                     # Item is an art item
+                    images.append((image, cleanUrl))
                     metadata.art[cleanUrl] = Proxy.Media(image.content, sort_order=idx)
+            except:
+                pass
+        elif PAsearchSites.posterOnlyAlreadyExists(cleanUrl, metadata):
+            posterExists = True
+
+    if not posterExists:
+        for idx, (image, cleanUrl) in enumerate(images, 1):
+            try:
+                im = StringIO(image.content)
+                resized_image = Image.open(im)
+                width, height = resized_image.size
+                # Add the image proxy items to the collection
+                if width > 1:
+                    # Item is a poster
+                    metadata.posters[cleanUrl] = Proxy.Media(image.content, sort_order=idx)
             except:
                 pass
 

@@ -3,7 +3,8 @@ import PAutils
 
 
 def getJSONfromPage(url):
-    req = PAutils.HTTPRequest(url)
+    cookies = {'age_verified': 'yes'}
+    req = PAutils.HTTPRequest(url, cookies=cookies)
 
     if req:
         jsonData = re.search(r'window\.__INITIAL_STATE__ = (.*);', req.text)
@@ -63,6 +64,7 @@ def search(results, lang, siteNum, searchData):
 
 
 def update(metadata, lang, siteNum, movieGenres, movieActors, art):
+    cookies = {'age_verified': 'yes'}
     metadata_id = str(metadata.id).split('|')
     sceneName = metadata_id[0]
     sceneDate = metadata_id[2]
@@ -80,13 +82,12 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.studio = 'TeamSkeet'
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
     if 'site' in detailsPageElements:
-        subSite = detailsPageElements['site']['name']
+        tagline = detailsPageElements['site']['name']
     else:
-        subSite = PAsearchSites.getSearchSiteName(siteNum)
-    metadata.tagline = subSite
-    metadata.collections.add(subSite)
+        tagline = PAsearchSites.getSearchSiteName(siteNum)
+    metadata.tagline = tagline
+    metadata.collections.add(tagline)
 
     # Release Date
     if sceneDate:
@@ -94,22 +95,27 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         metadata.originally_available_at = date_object
         metadata.year = metadata.originally_available_at.year
 
-    # Actors
-    movieActors.clearActors()
+    # Actor(s)
     actors = detailsPageElements['models']
     for actorLink in actors:
-        actorID = actorLink['modelId']
-        actorName = actorLink['modelName']
+        try:
+            actorID = actorLink['modelId']
+            actorName = actorLink['modelName']
+        except:
+            actorID = actorLink['id']
+            actorName = actorLink['name']
         actorPhotoURL = ''
 
-        actorData = getJSONfromPage('%s/models/%s' % (PAsearchSites.getSearchBaseURL(siteNum), actorID))
-        if actorData:
-            actorPhotoURL = actorData['modelsContent'][actorID]['img']
+        try:
+            actorData = getJSONfromPage('%s/models/%s' % (PAsearchSites.getSearchBaseURL(siteNum), actorID))
+            if actorData:
+                actorPhotoURL = actorData['modelsContent'][actorID]['img']
+        except:
+            pass
 
         movieActors.addActor(actorName, actorPhotoURL)
 
     # Genres
-    movieGenres.clearGenres()
     genres = []
 
     if 'tags' in detailsPageElements and detailsPageElements['tags']:
@@ -118,7 +124,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
             genres.append(genreName)
 
-    genres.extend(PAutils.getDictValuesFromKey(genresDB, subSite))
+    genres.extend(PAutils.getDictValuesFromKey(genresDB, tagline))
 
     for genreLink in genres:
         genreName = genreLink

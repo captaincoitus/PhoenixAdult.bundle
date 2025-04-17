@@ -190,7 +190,6 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 metadata.studio = ''
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
     try:
         try:
             tagline = detailsPageElements.xpath('//p[contains(., "Site:")]//following-sibling::a[@class="bold"]')[0].text_content().strip()
@@ -198,8 +197,11 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             try:
                 tagline = detailsPageElements.xpath('//b[contains(., "Network")]//following-sibling::a')[0].text_content().strip()
             except:
-                tagline = detailsPageElements.xpath('//p[contains(., "Movie:")]/a')[0].text_content()
-                metadata.collections.add(metadata.studio)
+                try:
+                    tagline = detailsPageElements.xpath('//p[contains(., "Webserie:")]/a')[0].text_content().strip()
+                except:
+                    tagline = detailsPageElements.xpath('//p[contains(., "Movie:")]/a')[0].text_content().strip()
+                    metadata.collections.add(metadata.studio)
 
         if len(metadata_id) > 3:
             Log('Using original series information')
@@ -236,14 +238,12 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         metadata.year = metadata.originally_available_at.year
 
     # Genres
-    movieGenres.clearGenres()
     for genreLink in detailsPageElements.xpath('//div[./b[contains(., "Categories")]]//a'):
         genreName = genreLink.text_content().strip()
 
         movieGenres.addGenre(genreName)
 
-    # Actors
-    movieActors.clearActors()
+    # Actor(s)
     actors = detailsPageElements.xpath('//h3[contains(., "Cast")]//following::div[./p[contains(., "No Profile")]]//span[@class]/text()')
     actors.extend(detailsPageElements.xpath('//h3[contains(., "Cast")]//following::div//a[contains(@href, "/name/")]/img/@alt'))
     for actor in actors:

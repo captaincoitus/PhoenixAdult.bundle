@@ -3,8 +3,13 @@ import PAutils
 
 
 def getToken(url):
+    # XConfessions
     if '//api.' in url:
         url = url.replace('//api.', '//', 1)
+
+    # LustCinema
+    if '//next-prod-api.' in url:
+        url = url.replace('//next-prod-api.', '//', 1)
 
     req = PAutils.HTTPRequest(url)
 
@@ -48,6 +53,16 @@ def search(results, lang, siteNum, searchData):
 
                 results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s' % (titleNoFormatting), score=score, lang=lang))
 
+        # Also try to get a direct match from the title slug
+        slug = searchData.title.replace(' ', '-').lower()
+        directMatch = getDatafromAPI(PAsearchSites.getSearchBaseURL(siteNum), slug, token, False)
+        if directMatch:
+            curID = directMatch['slug']
+            titleNoFormatting = directMatch['title']
+            # This is a perfect match, so give it a perfect score
+            score = 100
+            results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s' % (titleNoFormatting), score=score, lang=lang))
+
     return results
 
 
@@ -68,9 +83,15 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     producerLink = detailsPageElements['producer']
     metadata.studio = '%s %s' % (producerLink['name'], producerLink['last_name'])
 
+    # Producer
+    if producerLink['poster_image'] is not None:
+        producerPhotoURL = producerLink['poster_image'].split('?', 1)[0]
+    else:
+        producerPhotoURL = ''
+    movieActors.addProducer('%s %s' % (producerLink['name'], producerLink['last_name']), producerPhotoURL)
+
     # Tagline and Collection(s)
-    metadata.collections.clear()
-    tagline = PAsearchSites.getSearchSiteName(siteNum).strip()
+    tagline = PAsearchSites.getSearchSiteName(siteNum)
     metadata.tagline = tagline
     metadata.collections.add(tagline)
 
@@ -80,13 +101,19 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.year = metadata.originally_available_at.year
 
     # Genres
-    movieGenres.clearGenres()
     for genreLink in detailsPageElements['tags']:
         genreName = genreLink['title']
         movieGenres.addGenre(genreName)
 
-    # Actors
-    movieActors.clearActors()
+    # Compilation genre
+    if detailsPageElements['is_compilation'] or "compilation" in metadata.title.lower() or "compilation" in metadata.summary.lower():
+        movieGenres.addGenre('Compilation')
+
+    # Rating
+    if (isinstance(detailsPageElements['rating'], float)):
+        metadata.rating = detailsPageElements['rating'] * 2
+
+    # Actor(s)
     for actorLink in detailsPageElements['performers']:
         actorName = '%s %s' % (actorLink['name'], actorLink['last_name'])
         if actorLink['poster_image'] is not None:
@@ -96,12 +123,16 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         movieActors.addActor(actorName, actorPhotoURL)
 
     # Director
-    director = metadata.directors.new()
     directorLink = detailsPageElements['director']
-    director.name = '%s %s' % (directorLink['name'], directorLink['last_name'])
+    directorName = '%s %s' % (directorLink['name'], directorLink['last_name'])
+    movieActors.addDirector(directorName, '')
 
     # Poster
-    art.append(detailsPageElements['poster_picture'].split('?', 1)[0])
+    if detailsPageElements['poster_picture'] is not None:
+        art.append(detailsPageElements['poster_picture'].split('?', 1)[0])
+    # fallback to mobile banner if no poster
+    elif detailsPageElements['banner_image_mobile'] is not None:
+        art.append(detailsPageElements['banner_image_mobile'].split('?', 1)[0])
 
     for photoLink in detailsPageElements['album']:
         img = photoLink['path'].split('?', 1)[0]

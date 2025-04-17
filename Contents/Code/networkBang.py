@@ -37,9 +37,13 @@ def search(results, lang, siteNum, searchData):
 
         results.Append(MetadataSearchResult(id='%s|%d|%s' % (curID, siteNum, releaseDate), name='%s [%s] %s' % (titleNoFormatting, PAsearchSites.getSearchSiteName(siteNum), displayDate), score=score, lang=lang))
 
-    for searchResult in searchPageElements.xpath('//ul[contains(@class, "grid")]//li[contains(@class, "relative")]'):
-        titleNoFormatting = PAutils.parseTitle(searchResult.xpath('.//a[contains(@class, "block")] | .//span[contains(@class, "block")]')[0].text_content().strip(), siteNum)
-        sceneURL = searchResult.xpath('.//a/@href')[0]
+    for searchResult in searchPageElements.xpath('//div[contains(@class, "movie-preview") or contains(@class, "video_container")]'):
+        sceneURL = searchResult.xpath('./a[contains(@class, "group")]/@href')[0]
+        if 'dvd' in sceneURL:
+            titleNoFormatting = PAutils.parseTitle(searchResult.xpath('./a/div')[0].text_content().strip(), siteNum)
+        else:
+            titleNoFormatting = PAutils.parseTitle(searchResult.xpath('./a/span')[0].text_content().strip(), siteNum)
+
         if 'http' not in sceneURL:
             sceneURL = PAsearchSites.getSearchBaseURL(siteNum) + sceneURL
         curID = PAutils.Encode(sceneURL)
@@ -73,7 +77,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     req = PAutils.HTTPRequest(sceneURL)
     detailsPageElements = HTML.ElementFromString(req.text)
 
-    videoPageElements = json.loads(detailsPageElements.xpath('//script[@type="application/ld+json"]')[-1].text_content().replace('\n', '').strip())
+    videoPageElements = json.loads(detailsPageElements.xpath('//script[@type="application/ld+json"][contains(., "thumbnail")]')[-1].text_content().replace('\n', '').strip())
 
     # Title
     metadata.title = PAutils.parseTitle(PAutils.cleanHTML(videoPageElements['name']), siteNum)
@@ -85,11 +89,10 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.studio = re.sub(r'bang(?=(\s|$))(?!\!)', 'Bang!', PAutils.parseTitle(videoPageElements['productionCompany']['name'].strip(), siteNum), flags=re.IGNORECASE)
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
     tagline = ""
     dvdTitle = ""
     try:
-        tagline = re.sub(r'bang(?=(\s|$))(?!\!)', 'Bang!', PAutils.parseTitle(detailsPageElements.xpath('//p[contains(., "eries:")]/a[contains(@href, "video")]')[0].text_content().strip(), siteNum), flags=re.IGNORECASE)
+        tagline = re.sub(r'bang(?=(\s|$))(?!\!)', 'Bang!', PAutils.parseTitle(detailsPageElements.xpath('//p[contains(., "eries:")]/a[contains(@href, "originals") or contains(@href, "videos")]')[0].text_content().strip(), siteNum), flags=re.IGNORECASE)
     except:
         pass
 
@@ -118,14 +121,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         metadata.originally_available_at = date_object
         metadata.year = metadata.originally_available_at.year
 
-    # Actors
-    movieActors.clearActors()
+    # Actor(s)
     if siteNum == 1365:
-        actorXPATH = '//div[contains(@class, "clear-both")]//a[contains(@href, "pornstar")]'
+        actorXpath = '//div[contains(@class, "clear-both")]//a[contains(@href, "pornstar")]'
     else:
-        actorXPATH = '//div[contains(@class, "video-actors")]'
+        actorXpath = '//div[contains(@class, "name")]/a[contains(@href, "pornstar") and not(@aria-label)]'
 
-    for actorLink in detailsPageElements.xpath(actorXPATH):
+    for actorLink in detailsPageElements.xpath(actorXpath):
+        actorPhotoURL = ''
         if siteNum == 1365:
             actorName = actorLink.text_content()
 
@@ -133,18 +136,20 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             req = PAutils.HTTPRequest(modelURL)
             modelPage = HTML.ElementFromString(req.text)
 
-            modelPageElements = json.loads(modelPage.xpath('//script[@type="application/ld+json"]')[0].text_content().strip())
+            modelPageElements = json.loads(modelPage.xpath('//script[@type="application/ld+json"][contains(., "Person")]')[0].text_content().strip())
 
             actorPhotoURL = modelPageElements['image'].split('?')[0].strip()
         else:
             actorName = actorLink.xpath('.//span')[0].text_content()
-            actorPhotoURL = actorLink.xpath('.//img/@src')[0].split('?')[0]
+            img = actorLink.xpath('../..//img/@src')[0].split('?')[0]
+
+            if 'placeholder' not in img:
+                actorPhotoURL = img
 
         if actorName:
             movieActors.addActor(actorName, actorPhotoURL)
 
     # Genres
-    movieGenres.clearGenres()
     for genreLink in detailsPageElements.xpath('//div[@class="actions"]/a | //a[@class="genres"]'):
         genreName = genreLink.text_content()
 

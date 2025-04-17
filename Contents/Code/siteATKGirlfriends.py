@@ -74,8 +74,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.studio = 'ATKingdom'
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
-    tagline = PAsearchSites.getSearchSiteName(siteNum).strip()
+    tagline = PAsearchSites.getSearchSiteName(siteNum)
     metadata.tagline = tagline
     metadata.collections.add(tagline)
 
@@ -84,8 +83,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.originally_available_at = date_object
     metadata.year = metadata.originally_available_at.year
 
-    # Actors
-    movieActors.clearActors()
+    # Actor(s)
 
     actorName = sceneActor
     actorPhotoURL = ''
@@ -93,7 +91,6 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     movieActors.addActor(actorName, actorPhotoURL)
 
     # Genres
-    movieGenres.clearGenres()
     movieGenres.addGenre('Girlfriend Experience')
     # If scenePage is valid, try to load it to scrape genres
     try:
@@ -494,6 +491,7 @@ def getSceneInfo(searchTitle):
         'Rebecca Vanguard': 'sai003',
         'Reese Robbins': 'ree012',
         'Reina Heart': 'rei001',
+        'Renee Rose': 'ren057',
         'Renee Roulette': 'ren055',
         'Rhaya Shyne': 'rha001',
         'Rikki Rumor': 'rik006',

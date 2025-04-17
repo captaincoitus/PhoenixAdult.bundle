@@ -3,7 +3,8 @@ import PAutils
 
 
 def getJSONfromPage(url):
-    req = PAutils.HTTPRequest(url)
+    cookies = {'age_verified': 'yes'}
+    req = PAutils.HTTPRequest(url, cookies=cookies)
 
     if req:
         jsonData = re.search(r'window\.__INITIAL_STATE__ = (.*);', req.text)
@@ -80,7 +81,6 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.studio = 'MYLF'
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
     if 'site' in detailsPageElements:
         subSite = detailsPageElements['site']['name']
     else:
@@ -94,22 +94,27 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         metadata.originally_available_at = date_object
         metadata.year = metadata.originally_available_at.year
 
-    # Actors
-    movieActors.clearActors()
+    # Actor(s)
     actors = detailsPageElements['models']
     for actorLink in actors:
-        actorID = actorLink['modelId']
-        actorName = actorLink['modelName']
+        try:
+            actorID = actorLink['modelId']
+            actorName = actorLink['modelName']
+        except:
+            actorID = actorLink['id']
+            actorName = actorLink['name']
         actorPhotoURL = ''
 
-        actorData = getJSONfromPage('%s/models/%s' % (PAsearchSites.getSearchBaseURL(siteNum), actorID))
-        if actorData:
-            actorPhotoURL = actorData['modelsContent'][actorID]['img']
+        try:
+            actorData = getJSONfromPage('%s/models/%s' % (PAsearchSites.getSearchBaseURL(siteNum), actorID))
+            if actorData:
+                actorPhotoURL = actorData['modelsContent'][actorID]['img']
+        except:
+            pass
 
         movieActors.addActor(actorName, actorPhotoURL)
 
     # Genres
-    movieGenres.clearGenres()
     genres = ['MILF', 'Mature']
 
     if 'tags' in detailsPageElements and detailsPageElements['tags']:

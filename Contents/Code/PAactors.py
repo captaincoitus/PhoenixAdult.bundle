@@ -5,8 +5,11 @@ import PAsearchSites
 
 class PhoenixActors:
     actorsTable = []
+    directorsTable = []
+    producersTable = []
 
-    def addActor(self, newActor, newPhoto):
+    def addActor(self, newActor, newPhoto, **kwargs):
+        newGender = kwargs.pop('gender', '')
         newActor = newActor.encode('UTF-8') if isinstance(newActor, unicode) else newActor
         newPhoto = newPhoto.encode('UTF-8') if isinstance(newPhoto, unicode) else newPhoto
 
@@ -14,10 +17,37 @@ class PhoenixActors:
             self.actorsTable.append({
                 'name': newActor,
                 'photo': newPhoto,
+                'gender': newGender,
+            })
+
+    def addDirector(self, newDirector, newPhoto):
+        newDirector = newDirector.encode('UTF-8') if isinstance(newDirector, unicode) else newDirector
+        newPhoto = newPhoto.encode('UTF-8') if isinstance(newPhoto, unicode) else newPhoto
+
+        if newDirector not in [directorLink['name'] for directorLink in self.directorsTable]:
+            self.directorsTable.append({
+                'name': newDirector,
+                'photo': newPhoto,
+            })
+
+    def addProducer(self, newProducer, newPhoto):
+        newProducer = newProducer.encode('UTF-8') if isinstance(newProducer, unicode) else newProducer
+        newPhoto = newPhoto.encode('UTF-8') if isinstance(newPhoto, unicode) else newPhoto
+
+        if newProducer not in [producerLink['name'] for producerLink in self.producersTable]:
+            self.producersTable.append({
+                'name': newProducer,
+                'photo': newPhoto,
             })
 
     def clearActors(self):
         self.actorsTable = []
+
+    def clearDirectors(self):
+        self.directorsTable = []
+
+    def clearProducers(self):
+        self.producersTable = []
 
     def processActors(self, metadata, siteNum):
         for actorLink in self.actorsTable:
@@ -51,6 +81,7 @@ class PhoenixActors:
 
                             if searchStudioIndex == 32 and actorName != 'QueenSnake':
                                 actorName = '%s QueenSnake' % actorName
+                            searchActorName = actorName.lower()
 
                             break
 
@@ -65,6 +96,10 @@ class PhoenixActors:
                         displayActorName = actorName.replace('\xc2\xa0', '').strip()
 
                         (actorPhoto, gender) = actorDBfinder(displayActorName, metadata)
+                        if actorLink['gender']:
+                            gender = actorLink['gender']
+                        else:
+                            actorLink['gender'] = gender
                         Log('Actor: %s %s' % (displayActorName, actorPhoto))
                         Log('Gender: %s' % gender)
                         if Prefs['gender_enable']:
@@ -82,12 +117,20 @@ class PhoenixActors:
 
                     if not req or not req.ok:
                         (actorPhoto, gender) = actorDBfinder(displayActorName, metadata)
+                        if actorLink['gender']:
+                            gender = actorLink['gender']
+                        else:
+                            actorLink['gender'] = gender
                         Log('Gender: %s' % gender)
                         if Prefs['gender_enable']:
                             if gender == 'male':
                                 continue
                     elif Prefs['gender_enable']:
-                        gender = genderCheck(urllib.quote(actorName))
+                        if actorLink['gender']:
+                            gender = actorLink['gender']
+                        else:
+                            gender = genderCheck(actorName)
+                            actorLink['gender'] = gender
                         Log('Gender: %s' % gender)
                         if gender == 'male':
                             continue
@@ -100,9 +143,145 @@ class PhoenixActors:
                     role.name = actorName
                     role.photo = actorPhoto
 
+    def processDirectors(self, metadata, siteNum):
+        for directorLink in self.directorsTable:
+            skip = False
+            # Save the potential new Director to a new variable, replace &nbsp; with a true space, and strip off any surrounding whitespace
+            directorName = PAutils.parseTitle(directorLink['name'].replace('\xc2\xa0', ' ').replace(',', '').strip().lower(), 0)
+            directorPhoto = directorLink['photo'].strip()
+
+            directorName = ' '.join(directorName.split())
+
+            # Skip an Director completely
+            if not directorName:
+                skip = True
+            elif directorName == 'Bad Name':
+                skip = True
+            elif directorName == 'Test Model Name':
+                skip = True
+
+            if not skip:
+                searchStudioIndex = None
+                for studioIndex, studioList in PAdatabaseActors.ActorsStudioIndexes.items():
+                    if not siteNum == 684 and metadata.studio.lower() in map(str.lower, studioList) or PAsearchSites.getSearchSiteName(siteNum).lower() in map(str.lower, studioList):
+                        searchStudioIndex = studioIndex
+                        break
+
+                searchDirectorName = directorName.lower()
+                if searchStudioIndex is not None and searchStudioIndex in PAdatabaseActors.ActorsReplaceStudios:
+                    for newDirectorName, aliases in PAdatabaseActors.ActorsReplaceStudios[searchStudioIndex].items():
+                        if searchDirectorName == newDirectorName.lower() or searchDirectorName in map(str.lower, aliases):
+                            directorName = newDirectorName
+
+                            if searchStudioIndex == 32 and directorName != 'QueenSnake':
+                                directorName = '%s QueenSnake' % directorName
+
+                            break
+
+                for newDirectorName, aliases in PAdatabaseActors.ActorsReplace.items():
+                    if searchDirectorName == newDirectorName.lower() or searchDirectorName in map(str.lower, aliases):
+                        directorName = newDirectorName
+                        break
+
+                if ',' in directorName:
+                    for newDirector in directorName.split(','):
+                        directorName = newDirector.strip()
+                        displayDirectorName = directorName.replace('\xc2\xa0', '').strip()
+
+                        (directorPhoto, gender) = actorDBfinder(displayDirectorName, metadata)
+
+                        Log('Director: %s %s' % (displayDirectorName, directorPhoto))
+                        director = metadata.directors.new()
+                        director.name = directorName
+                        director.photo = directorPhoto
+                else:
+                    displayDirectorName = directorName.replace('\xc2\xa0', '').strip()
+                    req = None
+                    if directorPhoto:
+                        req = PAutils.HTTPRequest(directorPhoto, 'HEAD', bypass=False)
+
+                    if not req or not req.ok:
+                        (directorPhoto, gender) = actorDBfinder(displayDirectorName, metadata)
+
+                    if directorPhoto:
+                        directorPhoto = PAutils.getClearURL(directorPhoto)
+
+                    Log('Director: %s %s' % (displayDirectorName, directorPhoto))
+                    director = metadata.directors.new()
+                    director.name = directorName
+                    director.photo = directorPhoto
+
+    def processProducers(self, metadata, siteNum):
+        for producerLink in self.producersTable:
+            skip = False
+            # Save the potential new producer to a new variable, replace &nbsp; with a true space, and strip off any surrounding whitespace
+            producerName = PAutils.parseTitle(producerLink['name'].replace('\xc2\xa0', ' ').replace(',', '').strip().lower(), 0)
+            producerPhoto = producerLink['photo'].strip()
+
+            producerName = ' '.join(producerName.split())
+
+            # Skip an producer completely
+            if not producerName:
+                skip = True
+            elif producerName == 'Bad Name':
+                skip = True
+            elif producerName == 'Test Model Name':
+                skip = True
+
+            if not skip:
+                searchStudioIndex = None
+                for studioIndex, studioList in PAdatabaseActors.ActorsStudioIndexes.items():
+                    if not siteNum == 684 and metadata.studio.lower() in map(str.lower, studioList) or PAsearchSites.getSearchSiteName(siteNum).lower() in map(str.lower, studioList):
+                        searchStudioIndex = studioIndex
+                        break
+
+                searchProducerName = producerName.lower()
+                if searchStudioIndex is not None and searchStudioIndex in PAdatabaseActors.ActorsReplaceStudios:
+                    for newProducerName, aliases in PAdatabaseActors.ActorsReplaceStudios[searchStudioIndex].items():
+                        if searchProducerName == newProducerName.lower() or searchProducerName in map(str.lower, aliases):
+                            producerName = newProducerName
+
+                            if searchStudioIndex == 32 and producerName != 'QueenSnake':
+                                producerName = '%s QueenSnake' % producerName
+
+                            break
+
+                for newProducerName, aliases in PAdatabaseActors.ActorsReplace.items():
+                    if searchProducerName == newProducerName.lower() or searchProducerName in map(str.lower, aliases):
+                        producerName = newProducerName
+                        break
+
+                if ',' in producerName:
+                    for newProducer in producerName.split(','):
+                        producerName = newProducer.strip()
+                        displayProducerName = producerName.replace('\xc2\xa0', '').strip()
+
+                        (producerPhoto, gender) = actorDBfinder(displayProducerName, metadata)
+                        Log('Producer: %s %s' % (displayProducerName, producerPhoto))
+
+                        producer = metadata.producers.new()
+                        producer.name = producerName
+                        producer.photo = producerPhoto
+                else:
+                    displayProducerName = producerName.replace('\xc2\xa0', '').strip()
+                    req = None
+                    if producerPhoto:
+                        req = PAutils.HTTPRequest(producerPhoto, 'HEAD', bypass=False)
+
+                    if not req or not req.ok:
+                        (producerPhoto, gender) = actorDBfinder(displayProducerName, metadata)
+
+                    if producerPhoto:
+                        producerPhoto = PAutils.getClearURL(producerPhoto)
+
+                    Log('Producer: %s %s' % (displayProducerName, producerPhoto))
+                    producer = metadata.producers.new()
+                    producer.name = producerName
+                    producer.photo = producerPhoto
+
 
 def actorDBfinder(actorName, metadata):
-    actorEncoded = urllib.quote(actorName)
+    actorEncoded = urllib.quote(re.sub(r'(?<=\w)\.\s(?=\w\.)', '', actorName).replace('.', ''))
 
     actorPhotoURL = ''
     databaseName = ''
@@ -141,21 +320,56 @@ def actorDBfinder(actorName, metadata):
     if actorPhotoURL:
         Log('%s found in %s ' % (actorName, databaseName))
         Log('PhotoURL: %s' % actorPhotoURL)
+    elif Prefs['gender_enable']:
+        gender = genderCheck(actorName)
+        Log('%s image not found' % actorName)
     else:
         Log('%s not found' % actorName)
 
     return actorPhotoURL, gender
 
 
-def genderCheck(actorEncoded):
+def genderCheck(actorName):
+    actorEncoded = urllib.quote(re.sub(r'(?<=\w)\.\s(?=\w\.)', '', actorName).replace('.', ''))
+    period_corrections = {
+        (r'^dr%20', 'Dr%2E%20'), (r'%20st%20', '%20St.%20'), (r'^j%20', 'J%2E%20')
+    }
+
+    for value in period_corrections:
+        actorEncoded = re.sub(value[0], value[1], actorEncoded, flags=re.IGNORECASE)
+
     gender = ''
 
     url = 'http://www.iafd.com/results.asp?searchtype=comprehensive&searchstring=' + actorEncoded
     req = PAutils.HTTPRequest(url)
+
     actorSearch = HTML.ElementFromString(req.text)
-    actorPageURL = actorSearch.xpath('//table[@id="tblFem" or @id="tblMal"]//tbody//a/@href')
-    if actorPageURL:
-        gender = 'male' if 'gender=m' in actorPageURL[0] else 'female'
+    actorResults = actorSearch.xpath('//table[@id="tblFem" or @id="tblMal"]//tbody//td[2]//a')
+    actorAlias = actorSearch.xpath('//table[@id="tblFem" or @id="tblMal"]//tbody//td[@class="text-left"]')
+    maleActorURLs = actorSearch.xpath('//table[@id="tblMal"]//tbody//td[2]//a/@href')
+
+    if actorResults:
+        score = Util.LevenshteinDistance(actorName.lower(), actorResults[0].text_content().strip().lower()) + 1
+
+        results = []
+        for idx, actor in enumerate(actorResults, 0):
+            resultScore = Util.LevenshteinDistance(actorName.lower(), actor.text_content().strip().lower())
+
+            if resultScore != 0:
+                if actorName.lower() in actorAlias[idx].text_content().lower():
+                    resultScore = resultScore - 1
+
+            if resultScore == score:
+                results.append(actor)
+            elif resultScore < score:
+                score = resultScore
+                results = [actor]
+
+        if results:
+            actor = random.choice(results)
+            actorPageURL = actor.xpath('./@href')[0]
+
+        gender = 'male' if actorPageURL in maleActorURLs else 'female'
 
     return gender
 
@@ -221,14 +435,15 @@ def getFromIndexxx(actorName, actorEncoded, metadata):
 
 
 def getFromAdultDVDEmpire(actorName, actorEncoded, metadata):
+    cookies = {'ageConfirmed': 'true'}
     actorPhotoURL = ''
 
-    req = PAutils.HTTPRequest('https://www.adultdvdempire.com/performer/search?q=' + actorEncoded)
+    req = PAutils.HTTPRequest('https://www.adultdvdempire.com/performer/search?q=' + actorEncoded, cookies=cookies)
     actorSearch = HTML.ElementFromString(req.text)
     actorPageURL = actorSearch.xpath('//div[@id="performerlist"]/div//a/@href')
     if actorPageURL:
         actorPageURL = 'https://www.adultdvdempire.com' + actorPageURL[0]
-        req = PAutils.HTTPRequest(actorPageURL)
+        req = PAutils.HTTPRequest(actorPageURL, cookies=cookies)
         actorPage = HTML.ElementFromString(req.text)
         img = actorPage.xpath('//div[contains(@class, "performer-image-container")]/a/@href')
         if img:
@@ -266,12 +481,19 @@ def getFromBabesandStars(actorName, actorEncoded, metadata):
 def getFromIAFD(actorName, actorEncoded, metadata):
     actorPhotoURL = ''
     gender = ''
+    period_corrections = {
+        (r'^dr%20', 'Dr%2E%20'), (r'%20st%20', '%20St.%20'), (r'^j%20', 'J%2E%20')
+    }
+
+    for value in period_corrections:
+        actorEncoded = re.sub(value[0], value[1], actorEncoded, flags=re.IGNORECASE)
+
     req = PAutils.HTTPRequest('http://www.iafd.com/results.asp?searchtype=comprehensive&searchstring=' + actorEncoded)
 
     actorSearch = HTML.ElementFromString(req.text)
-    actorThumbs = actorSearch.xpath('//table[@id="tblFem" or @id="tblMal"]//tbody//td[1]//a')
     actorResults = actorSearch.xpath('//table[@id="tblFem" or @id="tblMal"]//tbody//td[2]//a')
     actorAlias = actorSearch.xpath('//table[@id="tblFem" or @id="tblMal"]//tbody//td[@class="text-left"]')
+    maleActorURLs = actorSearch.xpath('//table[@id="tblMal"]//tbody//td[2]//a/@href')
 
     actorPageURL = ''
     if actorResults:
@@ -288,26 +510,24 @@ def getFromIAFD(actorName, actorEncoded, metadata):
                 if metadata.studio.replace(' ', '').lower() in actorAlias[idx].text_content().replace(' ', '').lower():
                     resultScore = 0
 
-            if 'th_iafd_ad' not in actorThumbs[idx].xpath('.//@src')[0]:
-                if resultScore == score:
-                    results.append(actor)
-                elif resultScore < score:
-                    score = resultScore
-                    results = [actor]
+            if resultScore == score:
+                results.append(actor)
+            elif resultScore < score:
+                score = resultScore
+                results = [actor]
 
         if results:
             actor = random.choice(results)
             actorPageURL = actor.xpath('./@href')[0]
 
     if actorPageURL:
-        actorPageURL = 'http://www.iafd.com' + actorPageURL
-        req = PAutils.HTTPRequest(actorPageURL)
+        req = PAutils.HTTPRequest('http://www.iafd.com' + actorPageURL)
         actorPage = HTML.ElementFromString(req.text)
         img = actorPage.xpath('//div[@id="headshot"]//img/@src')
-        if img and 'nophoto' not in img[0]:
+        if img and 'nophoto' not in img[0] and 'th_iafd_ad' not in img[0]:
             actorPhotoURL = img[0]
 
-        gender = 'male' if 'gender=m' in actorPageURL else 'female'
+        gender = 'male' if actorPageURL in maleActorURLs else 'female'
 
     return actorPhotoURL, gender
 
@@ -327,7 +547,7 @@ def getFromJavBus(actorName, actorEncoded, metadata):
     actorPhotoURL = ''
     actorID = ''
 
-    for id, names in PAdatabaseActors.actorsReplaceJavBusSearch.items():
+    for id, names in PAdatabaseActors.ActorsReplaceJavBusSearch.items():
         if actorName.lower() in map(str.lower, names):
             actorID = id
             break
@@ -369,16 +589,16 @@ def getFromJAVDatabase(actorName, actorEncoded, metadata):
     req = PAutils.HTTPRequest('https://www.javdatabase.com/?wpessid=391488&s=' + actorEncoded)
 
     actorSearch = HTML.ElementFromString(req.text)
-    results = actorSearch.xpath('//div[@id="content"]//div[@class="row"]/div')
+    results = actorSearch.xpath('//div[@class="idol-thumb"]//img[@class]')
     lastScore = 100
     for actor in results:
-        actorSeachName = actor.xpath('.//h2/a')[0].text_content().strip().split('(')[0]
+        actorSeachName = actor.xpath('./@alt')[0].strip()
 
         score = Util.LevenshteinDistance(actorName, actorSeachName)
 
         if score < lastScore or not actorPhotoURL:
             lastScore = score
-            actorPhotoURL = actor.xpath('.//@src')[0]
+            actorPhotoURL = actor.xpath('./@data-src')[0]
 
             req = PAutils.HTTPRequest(actorPhotoURL)
             if 'unknown.' in req.url:

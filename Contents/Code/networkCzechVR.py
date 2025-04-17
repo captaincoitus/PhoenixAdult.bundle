@@ -45,16 +45,19 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     detailsPageElements = HTML.ElementFromString(req.text)
 
     # Title
-    metadata.title = detailsPageElements.xpath('//div[contains(@class, "nazev")]//*[name()="h1" or name()="h2"]')[0].text_content().replace('Czech VR Fetish', '').replace('Czech VR Casting', '').replace('Czech VR', '').strip()
+    metadata.title = detailsPageElements.xpath('//head/title')[0].text_content().replace('Czech VR Network', '').replace(' - Czech VR Fetish Porn Videos', '').replace('Czech VR Fetish', '').replace('Czech VR Casting', '').replace('Czech VR', '').strip()
 
     # Summary
-    metadata.summary = detailsPageElements.xpath('//div[@class="textDetail"]')[0].text_content().strip()
+    maybeSummary = detailsPageElements.xpath('//div[@class="text"]')
+    if maybeSummary:
+        metadata.summary = maybeSummary[0].text_content().strip()
+    else:
+        metadata.summary = detailsPageElements.xpath('//div[@class="textDetail"]')[0].text_content().strip()
 
     # Studio
     metadata.studio = 'CzechVR'
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
     tagline = PAsearchSites.getSearchSiteName(siteNum)
     metadata.tagline = tagline
     metadata.collections.add(tagline)
@@ -67,18 +70,21 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         metadata.year = metadata.originally_available_at.year
 
     # Genres
-    movieGenres.clearGenres()
+    for genreLink in detailsPageElements.xpath('//div[@class="tag new"]//a'):
+        genreName = genreLink.text_content().lower().strip()
+        movieGenres.addGenre(genreName)
     for genreLink in detailsPageElements.xpath('//div[@class="tag"]//a'):
         genreName = genreLink.text_content().lower().strip()
-
         movieGenres.addGenre(genreName)
 
-    # Actors
-    movieActors.clearActors()
+    # Actor(s)
+    for actorLink in detailsPageElements.xpath('//div[@class="modelky"]//a'):
+        actorName = actorLink.text_content().strip()
+        actorPhotoURL = ''
+        movieActors.addActor(actorName, actorPhotoURL)
     for actorLink in detailsPageElements.xpath('(//div[contains(@class, "nazev")])[1]//div[@class="featuring"]//a'):
         actorName = actorLink.text_content().strip()
         actorPhotoURL = ''
-
         movieActors.addActor(actorName, actorPhotoURL)
 
     # Posters
